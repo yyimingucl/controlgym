@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "controlgym"
-version = "1.0.0"
+version = "1.0.1"
 description = "large-scale safety-critical control benchmarks for reinforcement learning algorithms"
 authors = ["Xiangyuan Zhang <xz7@illinois.edu>", 
             "Weichao Mao <weichao2@illinois.edu>",

@@ -76,6 +76,7 @@ class SchrodingerEnv(PDE):
         R_weight: float = 1.0,
         action_limit: float = None,
         observation_limit: float = None,
+        state_limit: float = None,
         reward_limit: float = None,
         seed: int = None,
     ):
@@ -98,6 +99,7 @@ class SchrodingerEnv(PDE):
             R_weight=R_weight,
             action_limit=action_limit,
             observation_limit=observation_limit,
+            state_limit=state_limit,
             reward_limit=reward_limit,
             seed=seed,
         )
@@ -117,7 +119,8 @@ class SchrodingerEnv(PDE):
         
         # compute A and B2 matrices
         self.A = self._compute_A()
-        self.B2 = self.control_sup
+        self.control_sup_width = control_sup_width
+        self.B2 = self._compute_control_sup()
 
         # initial state parameters
         self.init_amplitude_mean = init_amplitude_mean
@@ -174,6 +177,8 @@ class SchrodingerEnv(PDE):
         ), "Input control has wrong dimension, the correct dimension is: " + str(
             (self.n_action,)
         )
+        action = np.clip(action, -self.action_limit, self.action_limit)
+
         # generate the process noise, which is a Gaussian random vector with dimension n_state
         disturbance = self.rng.multivariate_normal(
             np.zeros(self.n_state),
@@ -182,6 +187,7 @@ class SchrodingerEnv(PDE):
 
         # compute the observation
         observation = self._get_obs()
+        observation = np.clip(observation, -self.observation_limit, self.observation_limit)
 
         # compute the next state
         next_state = self.A @ self.state + self.B2 @ action + disturbance
@@ -193,6 +199,7 @@ class SchrodingerEnv(PDE):
         reward = self.get_reward(action, observation, disturbance, next_state)
 
         # update the environment
+        next_state = np.clip(next_state, -self.state_limit, self.state_limit)
         self.state = next_state
 
         # terminated if the cost is too large

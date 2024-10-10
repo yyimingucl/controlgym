@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setup(
     name="controlgym",
-    version="1.0.0",
+    version="1.0.1",
     description="large-scale safety-critical control benchmarks for reinforcement learning algorithms",
     license="MIT",
     long_description=long_description,

@@ -60,6 +60,7 @@ class PDE(gymnasium.Env):
         R_weight: float,
         action_limit: float,
         observation_limit: float,
+        state_limit: float,
         reward_limit: float,
         seed: int,
     ):
@@ -116,9 +117,9 @@ class PDE(gymnasium.Env):
 
         # set up the gym.Env attributes
         self.action_limit = np.inf if action_limit is None else action_limit
-        self.observation_limit = (
-            np.inf if observation_limit is None else observation_limit
-        )
+        self.observation_limit = np.inf if observation_limit is None else observation_limit
+        self.state_limit = np.inf if state_limit is None else state_limit
+
         self.reward_limit = np.inf if reward_limit is None else reward_limit
 
         self.action_space = gymnasium.spaces.Box(
@@ -133,6 +134,15 @@ class PDE(gymnasium.Env):
             shape=(self.n_observation,),
             dtype=float,
         )
+
+        
+        self.state_space = gymnasium.spaces.Box(
+            low=-self.state_limit,
+            high=self.state_limit,
+            shape=(self.n_state,),
+            dtype=float,
+        )
+      
         self.reward_range = (-self.reward_limit, self.reward_limit)
 
         self.step_count = 0
@@ -166,6 +176,7 @@ class PDE(gymnasium.Env):
         ), "Input control has wrong dimension, the correct dimension is: " + str(
             (self.n_action,)
         )
+        action = np.clip(action, -self.action_limit, self.action_limit)
 
         # sample the process noise, which is a Gaussian random vector with dimension n_state
         disturbance = self.rng.multivariate_normal(
@@ -175,6 +186,7 @@ class PDE(gymnasium.Env):
 
         # generate the observation
         observation = self._get_obs()
+        observation = np.clip(observation, -self.observation_limit, self.observation_limit)
 
         # evolve the PDE dynamics using numerical integration
         # for Convection-Diffusion-Reaction, Wave, and Schodinger,
@@ -241,6 +253,7 @@ class PDE(gymnasium.Env):
         reward = self.get_reward(action, observation, disturbance, next_state)
 
         # update the environment
+        next_state = np.clip(next_state, -self.state_limit, self.state_limit)
         self.state = next_state
 
         # terminated if the cost is too large
